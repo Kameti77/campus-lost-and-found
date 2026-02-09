@@ -4,48 +4,35 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 
 function MainNavbar({ onOpenSidebar }) {
   return (
-    <header
-      className="
-        flex items-center justify-between
-        border-b bg-white
-        px-3 py-2
-        sm:px-5 sm:py-3
-        md:px-6
-        lg:px-8
-      "
-    >
-      {/* Left */}
-      <div className="flex items-center gap-3">
+    <header className="flex items-center justify-between px-6 py-3 border-b bg-white">
 
-        {/* Hamburger always visible until lg */}
+      {/* LEFT SECTION */}
+      <div className="flex items-center gap-4">
+
+        {/* Mobile hamburger */}
         <button
           className="lg:hidden text-2xl"
           onClick={onOpenSidebar}
         >
-          ☰
+          <IoMenuOutline />
         </button>
 
         {/* Search */}
         <input
           type="text"
           placeholder="Search lost or found items..."
-          className="
-            hidden sm:block
-            border rounded-md
-            px-3 py-1.5
-            w-40
-            md:w-64
-            lg:w-80
-          "
+          className="hidden sm:block border rounded-md px-3 py-1 w-72"
         />
       </div>
 
-      {/* Right */}
-      <div className="flex items-center gap-3 sm:gap-4 text-xl">
-        🔔
-        👤
+      {/* RIGHT SECTION */}
+      <div className="flex items-center gap-4 text-2xl text-gray-600">
+        <IoNotificationsOutline />
+        <IoPersonCircleOutline />
       </div>
+
     </header>
   );
 }
+
 export default MainNavbar;
