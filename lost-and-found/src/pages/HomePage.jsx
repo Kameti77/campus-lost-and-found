@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getItems } from '../services/api';
 import ItemCard from '../components/ItemCard';
-import { IoSearchOutline } from "react-icons/io5";
-
+import { useSearch } from '../context/SearchContext'; 
 function HomePage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
+
+  // ✅ Use global search instead of local state
+  const { searchTerm } = useSearch();
 
   useEffect(() => {
     fetchItems();
@@ -17,6 +18,7 @@ function HomePage() {
   const fetchItems = async () => {
     setLoading(true);
     setError(null);
+
     try {
       const result = await getItems();
       setItems(result.items || []);
@@ -35,12 +37,20 @@ function HomePage() {
     );
   };
 
+  // ✅ Updated Filtering Logic
   const filteredItems = items
-    .filter(item => filter === 'All' ? true : item.status === filter)
     .filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      filter === 'All' ? true : item.status === filter
+    )
+    .filter(item => {
+      const term = searchTerm.toLowerCase();
+
+      return (
+        item.name?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term) ||
+        item.category?.toLowerCase().includes(term)
+      );
+    });
 
   return (
     <main className="flex-1 min-w-0 bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -48,29 +58,16 @@ function HomePage() {
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Page Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-2">
 
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Home
-            </h1>
-            <p className="text-gray-500 text-sm sm:text-base">
-              Browse recently reported lost and found items
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Home
+          </h1>
 
-          {/* Search Bar */}
-          <div className="relative w-full md:w-80">
-            <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <p className="text-gray-500 text-sm sm:text-base">
+            Browse recently reported lost and found items
+          </p>
 
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
-            />
-          </div>
         </div>
 
         {/* Filter Bar */}

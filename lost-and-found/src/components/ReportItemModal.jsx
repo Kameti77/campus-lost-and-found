@@ -1,15 +1,18 @@
 import { useState } from "react";
 
+const initialState = {
+  type: "lost",
+  title: "",
+  location: "",
+  date: "", // UI only (not sent to DB)
+  category: "",
+  description: "",
+  image: null,
+};
+
 function ReportItemModal({ isOpen, onClose, onSubmit }) {
-  const [formData, setFormData] = useState({
-    type: "lost",
-    title: "",
-    location: "",
-    date: "",
-    category: "",
-    description: "",
-    image: null,
-  });
+  const [formData, setFormData] = useState(initialState);
+  const [preview, setPreview] = useState(null);
 
   if (!isOpen) return null;
 
@@ -19,15 +22,51 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
   };
 
   const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed.");
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB.");
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      image: e.target.files[0],
+      image: file,
     }));
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    try {
+      await onSubmit(formData);
+
+      // Reset form after success
+      setFormData(initialState);
+      setPreview(null);
+      onClose();
+    } catch (error) {
+      console.error("Modal submit failed:", error);
+    }
+  };
+
+  const handleClose = () => {
+    setFormData(initialState);
+    setPreview(null);
+    onClose();
   };
 
   return (
@@ -36,19 +75,19 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
 
         {/* Close Button */}
         <button
-          className="absolute top-4 right-4 text-gray-500"
-          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          onClick={handleClose}
         >
           ✕
         </button>
 
         <h2 className="text-xl font-semibold mb-4">
-          Report Item
+          Report Lost or Found Item
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Lost / Found Toggle */}
+          {/* Status */}
           <div>
             <label className="block font-medium mb-1">
               Item Status *
@@ -71,10 +110,11 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
             <label className="block font-medium mb-1">
               Item Title *
             </label>
+
             <input
               type="text"
               name="title"
-              placeholder="ex. Black Backpack"
+              placeholder="Ex. Black Backpack"
               value={formData.title}
               onChange={handleChange}
               className="w-full border rounded-lg p-2"
@@ -87,10 +127,11 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
             <label className="block font-medium mb-1">
               Location *
             </label>
+
             <input
               type="text"
               name="location"
-              placeholder="ex. Library 2nd Floor"
+              placeholder="Ex. Library 2nd Floor"
               value={formData.location}
               onChange={handleChange}
               className="w-full border rounded-lg p-2"
@@ -98,11 +139,12 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
 
-          {/* Date */}
+          {/* Date (UI only) */}
           <div>
             <label className="block font-medium mb-1">
               Date *
             </label>
+
             <input
               type="date"
               name="date"
@@ -166,11 +208,23 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
 
+          {/* Image Preview */}
+          {preview && (
+            <div>
+              <p className="text-sm font-medium mb-2">Preview:</p>
+              <img
+                src={preview}
+                alt="Preview"
+                className="max-w-xs rounded-lg border"
+              />
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 border rounded-lg"
             >
               Cancel
@@ -178,7 +232,7 @@ function ReportItemModal({ isOpen, onClose, onSubmit }) {
 
             <button
               type="submit"
-              className="px-4 py-2 bg-red-600 text-white rounded-lg"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               Submit Report
             </button>
