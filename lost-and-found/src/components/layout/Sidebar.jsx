@@ -1,12 +1,11 @@
 import { useState } from 'react';
-
 import { IoHomeOutline } from "react-icons/io5";
 import { PiWarningCircleLight } from "react-icons/pi";
 import { IoIosCheckmarkCircleOutline } from "react-icons/io";
 import { FiMessageSquare } from "react-icons/fi";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import ReportItemModal from "../ReportItemModal"
-
+import { createItem, uploadImage } from "../../services/api";
 import { PAGES } from "../../utils/pages";
 
 function Sidebar({ currentPage, onChangePage, isOpen, onClose }) {
@@ -20,8 +19,8 @@ function Sidebar({ currentPage, onChangePage, isOpen, onClose }) {
   ];
 
   const reportItems = [
-  { label: "Report Item", icon: IoMdAddCircleOutline }
-];
+    { label: "Report Item", icon: IoMdAddCircleOutline }
+  ];
 
   const renderNavItem = (item) => {
 
@@ -46,6 +45,34 @@ function Sidebar({ currentPage, onChangePage, isOpen, onClose }) {
         <span className="font-medium">{item.label}</span>
       </li>
     );
+  };
+
+  const handleSubmitItem = async (data) => {
+    try {
+      let imageUrl = null;
+
+      if (data.image) {
+        const uploadResult = await uploadImage(data.image);
+        imageUrl = uploadResult.imageUrl;
+      }
+
+      const payload = {
+        name: data.title,
+        description: data.description,
+        status: data.type === "lost" ? "Lost" : "Found",
+        category: data.category || "Other",
+        location: data.location,
+        imageUrl,
+        datePosted: new Date(),
+      };
+
+      await createItem(payload);
+
+      setShowModal(false);
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -103,16 +130,18 @@ function Sidebar({ currentPage, onChangePage, isOpen, onClose }) {
             })}
           </ul>
 
-          
-       
-      </nav>
 
-    </aside >
-          <ReportItemModal
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-            onSubmit={(data) => console.log(data)}
-          />
+
+        </nav>
+
+      </aside >
+
+      <ReportItemModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleSubmitItem}
+      />
+
     </>
   );
 }

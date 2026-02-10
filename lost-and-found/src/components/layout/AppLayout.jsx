@@ -5,27 +5,28 @@ import { PAGES } from "../../utils/pages";
 
 import HomePage from "../../pages/HomePage";
 import LostItemsPage from "../../pages/LostItemsPage";
+import FoundItemsPage from "../../pages/FoundItemsPage";
 
 function AppLayout() {
   const [currentPage, setCurrentPage] = useState(PAGES.HOME);
-  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderPage = () => {
-  switch (currentPage) {
-    case "home":
-      return <HomePage />;
-    case "lost":
+    switch (currentPage) {
+      case PAGES.HOME:
+        return <HomePage />;
+
+      case PAGES.LOST:
         return <LostItemsPage />;
-    case "items":
-      return <ItemListPage />;
-    case "create":
-      return <CreateItemPage />;
-    default:
-      return <HomePage />;
-  }
-};
+
+      default:
+        return <FoundItemsPage />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
+
       {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
@@ -36,9 +37,12 @@ function AppLayout() {
 
       {/* Content Column */}
       <div className="flex flex-col flex-1 min-w-0">
-        <MainNavbar onOpenSidebar={() => setSidebarOpen(true)} />
 
-        {/* Content Container */}
+        <MainNavbar
+          onOpenSidebar={() => setSidebarOpen(true)}
+        />
+
+        {/* Content */}
         <main
           className="
             flex-1
@@ -56,6 +60,7 @@ function AppLayout() {
         >
           {renderPage()}
         </main>
+
       </div>
     </div>
   );

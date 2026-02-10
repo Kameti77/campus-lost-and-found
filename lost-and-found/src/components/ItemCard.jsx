@@ -1,18 +1,41 @@
 import { useState } from 'react';
 import { updateItem } from '../services/api';
+import { useSearch } from '../context/SearchContext';
 
 function ItemCard({ item, onStatusChange }) {
   const [loading, setLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(item.status);
   const [message, setMessage] = useState(null);
 
-  const statusColor = currentStatus === 'Lost'
-    ? 'bg-red-100 text-red-800'
-    : 'bg-green-100 text-green-800';
+  const { searchTerm } = useSearch(); // ✅ Global search
 
-  const buttonColor = currentStatus === 'Lost'
-    ? 'bg-green-600 hover:bg-green-700'
-    : 'bg-red-600 hover:bg-red-700';
+  /* ---------------- Highlight Helper ---------------- */
+  const highlightText = (text) => {
+    if (!searchTerm) return text;
+
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+
+    return text.split(regex).map((part, index) =>
+      part.toLowerCase() === searchTerm.toLowerCase()
+        ? (
+          <span key={index} className="bg-yellow-200 font-semibold">
+            {part}
+          </span>
+        )
+        : part
+    );
+  };
+  /* -------------------------------------------------- */
+
+  const statusColor =
+    currentStatus === 'Lost'
+      ? 'bg-red-100 text-red-800'
+      : 'bg-green-100 text-green-800';
+
+  const buttonColor =
+    currentStatus === 'Lost'
+      ? 'bg-green-600 hover:bg-green-700'
+      : 'bg-red-600 hover:bg-red-700';
 
   const newStatus = currentStatus === 'Lost' ? 'Found' : 'Lost';
 
@@ -25,11 +48,10 @@ function ItemCard({ item, onStatusChange }) {
       setCurrentStatus(newStatus);
       setMessage({ type: 'success', text: `Marked as ${newStatus}` });
 
-      // Notify parent to refresh list if needed
       if (onStatusChange) {
         onStatusChange(item.id, newStatus);
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to update' });
     } finally {
       setLoading(false);
@@ -38,6 +60,7 @@ function ItemCard({ item, onStatusChange }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+
       {/* Image */}
       {item.imageUrl ? (
         <img
@@ -53,6 +76,7 @@ function ItemCard({ item, onStatusChange }) {
 
       {/* Content */}
       <div className="p-4">
+
         {/* Status Badge */}
         <div className="mb-2">
           <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${statusColor}`}>
@@ -60,20 +84,20 @@ function ItemCard({ item, onStatusChange }) {
           </span>
         </div>
 
-        {/* Item Name */}
+        {/* Name with highlight */}
         <h3 className="text-xl font-bold text-gray-800 mb-2">
-          {item.name}
+          {highlightText(item.name || '')}
         </h3>
 
-        {/* Description */}
+        {/* Description with highlight */}
         <p className="text-gray-600 mb-3 line-clamp-2">
-          {item.description}
+          {highlightText(item.description || '')}
         </p>
 
-        {/* Category */}
+        {/* Category with highlight */}
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <span className="font-medium">Category:</span>
-          <span>{item.category}</span>
+          <span>{highlightText(item.category || '')}</span>
         </div>
 
         {/* Date */}
@@ -92,7 +116,7 @@ function ItemCard({ item, onStatusChange }) {
           </div>
         )}
 
-        {/* Status Update Button */}
+        {/* Status Toggle */}
         <button
           onClick={handleStatusChange}
           disabled={loading}
@@ -100,6 +124,7 @@ function ItemCard({ item, onStatusChange }) {
         >
           {loading ? 'Updating...' : `Mark as ${newStatus}`}
         </button>
+
       </div>
     </div>
   );
