@@ -8,7 +8,7 @@ function HomePage() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  // ✅ Use global search instead of local state
+ 
   const { searchTerm } = useSearch();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ function HomePage() {
     );
   };
 
-  // ✅ Updated Filtering Logic
+  // Filtering Logic
   const filteredItems = items
     .filter(item =>
       filter === 'All' ? true : item.status === filter

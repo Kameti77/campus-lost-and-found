@@ -107,7 +107,7 @@ export const uploadImage = async (file) => {
 
     const response = await fetch(`${API_URL}/upload`, {
       method: 'POST',
-      body: formData, // Don't set Content-Type header, browser will set it
+      body: formData, 
     });
     
     const data = await response.json();
