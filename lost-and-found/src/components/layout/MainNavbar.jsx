@@ -8,17 +8,24 @@ import {
   IoCheckmarkCircle,
   IoMailOutline,
   IoShieldCheckmarkOutline,
+  IoPersonOutline,
 } from "react-icons/io5";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSearch } from "../../context/SearchContext";
 import { useAuth } from "../../context/AuthContext";
+import useUserProfile from "../../hooks/useUserProfile";
 import useDebounce from "../../hooks/useDebounce";
 import SearchSuggestions from "../SearchSuggestions";
 
 function MainNavbar({ onOpenSidebar, items = [] }) {
   const { searchTerm, setSearchTerm } = useSearch();
   const { currentUser, logout } = useAuth();
+
+  // useUserProfile fetches Firestore data + provides getInitials()
+  // getInitials() returns "JD" for John Doe, "J" for John, "?" as fallback
+  const { profile, getInitials } = useUserProfile();
+
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -26,39 +33,16 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
   const navigate = useNavigate();
 
   const debouncedSearch = useDebounce(searchTerm);
-
   const suggestionResults = items.filter(
     (item) =>
       item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       item.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!currentUser?.email) return "?";
-    return currentUser.email.charAt(0).toUpperCase();
-  };
-
-  // Get username from email (before @)
-  const getUsername = () => {
-    if (!currentUser?.email) return "User";
-    return currentUser.email.split("@")[0];
-  };
-
-  // Get domain from email (after @)
-  const getDomain = () => {
-    if (!currentUser?.email) return "";
-    return "@" + currentUser.email.split("@")[1];
-  };
-
   // Close sidebar when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        profileOpen &&
-        sidebarRef.current &&
-        !sidebarRef.current.contains(e.target)
-      ) {
+      if (profileOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
         setProfileOpen(false);
       }
     };
@@ -66,25 +50,17 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [profileOpen]);
 
-  // Close sidebar on Escape key
+  // Close on Escape key
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setProfileOpen(false);
-    };
+    const handleEsc = (e) => { if (e.key === "Escape") setProfileOpen(false); };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
-  // Lock body scroll when sidebar is open on mobile
+  // Lock body scroll on mobile when sidebar open
   useEffect(() => {
-    if (profileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = profileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [profileOpen]);
 
   const handleLogout = async () => {
@@ -108,7 +84,7 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
             <IoMenuOutline />
           </button>
 
-          {/* SEARCH BAR */}
+          {/* Search */}
           <div className="relative hidden sm:block w-72">
             <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -135,23 +111,20 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
             <IoNotificationsOutline />
           </button>
 
-          {/* Profile Button */}
+          {/* Profile button — shows initials (JD) instead of generic icon */}
           <button
             onClick={() => setProfileOpen(true)}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group"
             aria-label="Open profile menu"
           >
-            {/* Avatar Circle */}
-            <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-transparent group-hover:ring-orange-300 transition-all">
-              {getUserInitials()}
+            <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-transparent group-hover:ring-orange-300 transition-all">
+              {getInitials()}
             </div>
           </button>
         </div>
       </header>
 
-      {/* ─────────────────────────────────────────────
-          BACKDROP
-      ───────────────────────────────────────────── */}
+      {/* Backdrop */}
       <div
         onClick={() => setProfileOpen(false)}
         className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${
@@ -159,16 +132,14 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
         }`}
       />
 
-      {/* ─────────────────────────────────────────────
-          SLIDING SIDEBAR
-      ───────────────────────────────────────────── */}
+      {/* ── Sliding Sidebar ── */}
       <div
         ref={sidebarRef}
         className={`fixed top-0 right-0 h-full w-72 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
           profileOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <span className="text-sm font-semibold text-gray-700 tracking-wide uppercase">
             Account
@@ -176,32 +147,28 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
           <button
             onClick={() => setProfileOpen(false)}
             className="text-xl text-gray-400 hover:text-gray-700 transition-colors"
-            aria-label="Close profile menu"
           >
             <IoCloseOutline />
           </button>
         </div>
 
-        {/* ── User Info ── */}
+        {/* User Info */}
         <div className="px-5 py-6 border-b border-gray-100">
           <div className="flex items-center gap-4">
-            {/* Large Avatar */}
+            {/* Large avatar with initials */}
             <div className="w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-              {getUserInitials()}
+              {getInitials()}
             </div>
-
-            {/* Name & Email */}
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 truncate capitalize">
-                {getUsername()}
+              {/* Show full name from Firestore if loaded, fallback to email */}
+              <p className="font-semibold text-gray-900 truncate">
+                {profile?.displayName || currentUser?.email?.split('@')[0]}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {currentUser?.email}
-              </p>
+              <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
             </div>
           </div>
 
-          {/* Verified Badge */}
+          {/* Verified badge */}
           {currentUser?.emailVerified && (
             <div className="mt-4 flex items-center gap-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg text-xs font-medium">
               <IoShieldCheckmarkOutline className="text-base flex-shrink-0" />
@@ -210,19 +177,18 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
           )}
         </div>
 
-        {/* ── Menu Items (future use) ── */}
+        {/* Menu Items */}
         <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {/* Profile item (placeholder) */}
-          <button
-            disabled
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-not-allowed"
+
+          {/* My Profile — navigates to /profile */}
+          <Link
+            to="/profile"
+            onClick={() => setProfileOpen(false)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
           >
-            <IoPersonCircleOutline className="text-lg flex-shrink-0" />
+            <IoPersonOutline className="text-lg flex-shrink-0" />
             <span>My Profile</span>
-            <span className="ml-auto text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">
-              Soon
-            </span>
-          </button>
+          </Link>
 
           {/* My Reports (placeholder) */}
           <button
@@ -249,7 +215,7 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
           </button>
         </div>
 
-        {/* ── Logout ── */}
+        {/* Logout */}
         <div className="px-5 py-5 border-t border-gray-100">
           <button
             onClick={handleLogout}
@@ -258,24 +224,9 @@ function MainNavbar({ onOpenSidebar, items = [] }) {
           >
             {loggingOut ? (
               <>
-                <svg
-                  className="animate-spin h-4 w-4 text-red-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
+                <svg className="animate-spin h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 Signing out...
               </>
