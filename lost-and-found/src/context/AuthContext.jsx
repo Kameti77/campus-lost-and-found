@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -7,18 +7,17 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  updateProfile
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext({});
 
-// Custom hook to use auth context - use this in components
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
 
@@ -26,29 +25,47 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Validate Full Sail email - checks if email ends with fullsail.edu or fullsail.com
-  // This catches student.fullsail.edu, faculty.fullsail.edu, etc.
+  // Validate Full Sail email
+  // endsWith catches all subdomains: student.fullsail.edu, faculty.fullsail.edu, etc.
   const isValidSchoolEmail = (email) => {
     return email.endsWith('fullsail.edu') || email.endsWith('fullsail.com');
   };
 
-  // Sign up new user
-  const signup = async (email, password) => {
-    // Validate email domain BEFORE creating account
+  // ─── SIGNUP ────────────────────────────────────────────────────────────────
+  // Now accepts firstName + lastName in addition to email/password
+  const signup = async (email, password, firstName, lastName) => {
     if (!isValidSchoolEmail(email)) {
       throw new Error('Please use a Full Sail University email address (@fullsail.edu or @fullsail.com)');
     }
 
     try {
-      // Create user account
+      // Step 1: Create the auth account
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Automatically send verification email
-      await sendEmailVerification(userCredential.user);
-      
-      return userCredential.user;
+      const user = userCredential.user;
+
+      // Step 2: Save full name to Firebase Auth displayName
+      // This means currentUser.displayName works anywhere without a DB query
+      await updateProfile(user, {
+        displayName: `${firstName.trim()} ${lastName.trim()}`
+      });
+
+      // Step 3: Create user document in Firestore users collection
+      // Document ID = user's uid (unique ID from Firebase Auth)
+      // This is the standard pattern - fast lookups, no duplicates
+      await setDoc(doc(db, 'users', user.uid), {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        displayName: `${firstName.trim()} ${lastName.trim()}`,
+        email: email.toLowerCase(),
+        uid: user.uid,
+        createdAt: serverTimestamp(), // Firebase server time, not client clock
+      });
+
+      // Step 4: Send verification email
+      await sendEmailVerification(user);
+
+      return user;
     } catch (error) {
-      // Firebase error codes - make them user-friendly
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('This email is already registered. Please login instead.');
       } else if (error.code === 'auth/weak-password') {
@@ -60,25 +77,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign in existing user
+  // ─── LOGIN ─────────────────────────────────────────────────────────────────
   const login = async (email, password) => {
     try {
-      // Set persistence to LOCAL - keeps user logged in even after browser closes
-      // This is what makes users stay logged in for weeks/months!
       await setPersistence(auth, browserLocalPersistence);
-      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Check if email is verified - security requirement
+
       if (!userCredential.user.emailVerified) {
-        // Sign them out if not verified
         await signOut(auth);
         throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
       }
-      
+
       return userCredential.user;
     } catch (error) {
-      // Firebase error codes
       if (error.code === 'auth/user-not-found') {
         throw new Error('No account found with this email. Please sign up first.');
       } else if (error.code === 'auth/wrong-password') {
@@ -92,7 +103,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign out user
+  // ─── LOGOUT ────────────────────────────────────────────────────────────────
   const logout = async () => {
     try {
       await signOut(auth);
@@ -101,12 +112,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Reset password - sends email with reset link
+  // ─── RESET PASSWORD ────────────────────────────────────────────────────────
   const resetPassword = async (email) => {
     if (!isValidSchoolEmail(email)) {
       throw new Error('Please use a Full Sail University email address');
     }
-
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
@@ -117,12 +127,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Resend verification email - if user didn't receive it
+  // ─── RESEND VERIFICATION ───────────────────────────────────────────────────
   const resendVerificationEmail = async () => {
-    if (!currentUser) {
-      throw new Error('No user logged in');
-    }
-
+    if (!currentUser) throw new Error('No user logged in');
     try {
       await sendEmailVerification(currentUser);
     } catch (error) {
@@ -130,28 +137,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Listen for auth state changes - runs automatically
-  // This detects when user logs in/out and updates currentUser
+  // ─── AUTH STATE LISTENER ───────────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      setLoading(false); // Stop loading once we know auth state
+      setLoading(false);
     });
-
-    // Cleanup listener on unmount
     return unsubscribe;
   }, []);
 
-  // Values available to all components
   const value = {
-    currentUser,           // Current logged-in user object (or null)
-    loading,              // True while checking auth state
-    signup,               // Function to create account
-    login,                // Function to log in
-    logout,               // Function to log out
-    resetPassword,        // Function to reset password
-    resendVerificationEmail, // Function to resend verification
-    isValidSchoolEmail    // Function to validate email
+    currentUser,
+    loading,
+    signup,
+    login,
+    logout,
+    resetPassword,
+    resendVerificationEmail,
+    isValidSchoolEmail,
   };
 
   return (
