@@ -3,33 +3,27 @@ import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
 import AppLayout from './components/layout/AppLayout';
 import PrivateRoute from './components/auth/PrivateRoute';
-
-// Auth pages
+import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 
-// Protected pages
-import Profile from './pages/Profile';
-
 function App() {
   return (
     <BrowserRouter>
-      {/* AuthProvider must wrap everything so all components can access auth state */}
       <AuthProvider>
         <SearchProvider>
           <Routes>
 
-            {/* ── PUBLIC ROUTES — no login required ── */}
+            {/* ── PUBLIC ── */}
             <Route path="/login"           element={<Login />} />
             <Route path="/signup"          element={<Signup />} />
             <Route path="/verify-email"    element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* ── PROTECTED ROUTES — must be logged in + verified ── */}
-
-            {/* Profile page — standalone, outside AppLayout so it has its own header */}
+            {/* ── PROTECTED: standalone pages (outside AppLayout) ── */}
+            {/* Profile must be listed BEFORE the /* catch-all */}
             <Route
               path="/profile"
               element={
@@ -39,7 +33,8 @@ function App() {
               }
             />
 
-            {/* Main app — AppLayout contains your existing sidebar + content */}
+            {/* ── PROTECTED: main app shell ── */}
+            {/* AppLayout has its own nested Routes for /, /lost, /found */}
             <Route
               path="/*"
               element={
@@ -48,9 +43,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-
-            {/* Catch-all fallback */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
 
           </Routes>
         </SearchProvider>

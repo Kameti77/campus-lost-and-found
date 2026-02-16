@@ -21,12 +21,12 @@ app.get('/api/test', (req, res) => {
 const itemRoutes = require('./routes/itemRoutes');
 const testFirebaseRoutes = require('./routes/testFirebase');
 const uploadRoutes = require('./routes/uploadRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 app.use('/api/items', itemRoutes);
 app.use('/api/test-firebase', testFirebaseRoutes);
 app.use('/api/upload', uploadRoutes);
-
-
+app.use('/api/notifications', notificationRoutes);
 
 // Start server
 app.listen(PORT, () => {
