@@ -16,7 +16,7 @@ function FoundItemsPage({ onCardClick, onItemsLoaded }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">📦 Found Items</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Found Items</h1>
           <p className="text-gray-500 text-sm mt-1">
             Items found and reported by the community
           </p>
@@ -54,7 +54,7 @@ function FoundItemsPage({ onCardClick, onItemsLoaded }) {
       {/* Empty State */}
       {!loading && !error && filteredItems.length === 0 && (
         <div className="bg-white border rounded-xl p-10 text-center shadow-sm">
-          <p className="text-4xl mb-3">📦</p>
+          <p className="text-4xl mb-3"></p>
           <h3 className="text-lg font-semibold text-gray-800">No found items reported</h3>
           <p className="text-gray-500 mt-2">Check back later or report a found item.</p>
         </div>

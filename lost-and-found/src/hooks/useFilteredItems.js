@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { getItems } from '../services/api';
 import { useSearch } from '../context/SearchContext';
 
-// Reusable hook used by LostItemsPage and FoundItemsPage
-// typeFilter: "lost" or "found" (case-insensitive match)
-// Returns filtered items + loading/error state
+// typeFilter: "lost" | "found" | "all"
+// "all" skips type filtering — used by MyReportsPage which filters by owner instead
 
 const useFilteredItems = (typeFilter) => {
-  const [items, setItems] = useState([]);       // all items of this type
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { searchTerm } = useSearch();
@@ -23,12 +22,14 @@ const useFilteredItems = (typeFilter) => {
       const result = await getItems();
       const all = result.items || [];
 
-      // Filter by type — handles both new lowercase ("lost"/"found")
-      // and legacy capitalized ("Lost"/"Found") values
-      const filtered = all.filter(item => {
-        const type = (item.type || item.status || '').toLowerCase();
-        return type === typeFilter.toLowerCase();
-      });
+      // 'all' = no type filter (MyReportsPage filters by owner uid instead)
+      // Otherwise handles both lowercase ("lost"/"found") and legacy ("Lost"/"Found")
+      const filtered = typeFilter === 'all'
+        ? all
+        : all.filter(item => {
+            const type = (item.type || item.status || '').toLowerCase();
+            return type === typeFilter.toLowerCase();
+          });
 
       setItems(filtered);
     } catch (err) {
@@ -38,7 +39,7 @@ const useFilteredItems = (typeFilter) => {
     }
   };
 
-  // Apply search on top of type filter
+  // Apply search term on top of type filter
   const filteredItems = items.filter(item => {
     const term = searchTerm.toLowerCase();
     if (!term) return true;
