@@ -16,7 +16,7 @@ function LostItemsPage({ onCardClick, onItemsLoaded }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">🔍 Lost Items</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lost Items</h1>
           <p className="text-gray-500 text-sm mt-1">
             Items reported lost by the community
           </p>

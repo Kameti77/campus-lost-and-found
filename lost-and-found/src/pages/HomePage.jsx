@@ -69,7 +69,7 @@ function HomePage({ onCardClick, onItemsLoaded, onItemCreated }) {
       {/* Filter Bar */}
       <div className="flex flex-wrap gap-2">
         {['All', 'lost', 'found'].map(type => {
-          const label = type === 'All' ? 'All' : type === 'lost' ? '🔍 Lost' : '📦 Found';
+          const label = type === 'All' ? 'All' : type === 'lost' ? 'Lost' : 'Found';
           const active = filter === type;
           return (
             <button
