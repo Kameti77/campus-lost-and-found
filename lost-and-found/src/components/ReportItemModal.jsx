@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoCloseOutline, IoLockClosedOutline, IoImageOutline } from "react-icons/io5";
 import { useAuth } from "../context/AuthContext";
 import { createItem, uploadImage } from "../services/api";
@@ -17,17 +17,35 @@ const initialState = {
   // images handled separately as File objects
 };
 
-function ReportItemModal({ isOpen, onClose, onItemCreated }) {
+function ReportItemModal({ isOpen, onClose, onItemCreated, prefillData }) {
   const { currentUser } = useAuth();
   const { profile } = useUserProfile();
 
   const [formData, setFormData] = useState(initialState);
-  const [publicImage, setPublicImage] = useState(null);      // lost: public image
-  const [privateImage, setPrivateImage] = useState(null);    // found: private image OR lost: proof
+  const [publicImage, setPublicImage] = useState(null);
+  const [privateImage, setPrivateImage] = useState(null);
   const [publicPreview, setPublicPreview] = useState(null);
   const [privatePreview, setPrivatePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Apply prefill data when it arrives (from "I Found This" button)
+  useEffect(() => {
+    if (prefillData && isOpen) {
+      setFormData({
+        type: prefillData.prefillType || "lost",
+        title: prefillData.prefillTitle || "",
+        category: prefillData.prefillCategory || "",
+        location: prefillData.prefillLocation || "",
+        currentLocation: "",
+        date: "",
+        privateDescription: "",
+      });
+    } else if (!isOpen) {
+      // Reset when modal closes
+      setFormData(initialState);
+    }
+  }, [prefillData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -108,6 +126,8 @@ function ReportItemModal({ isOpen, onClose, onItemCreated }) {
         privateImageUrl,   // lost: proof url | found: item image url
         reportedBy: currentUser.uid,
         reportedByName: profile?.firstName || currentUser.email.split('@')[0],
+        // If this was triggered by "I Found This", link to original lost post
+        relatedToLostItemId: prefillData?.relatedToLostItemId || null,
       };
 
       const result = await createItem(itemPayload);

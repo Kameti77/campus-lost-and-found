@@ -49,7 +49,7 @@ const toInputDate = (value) => {
   return `${y}-${m}-${day}`;
 };
 
-function ItemDetailModal({ item, isOpen, onClose, onItemUpdated, onItemDeleted }) {
+function ItemDetailModal({ item, isOpen, onClose, onItemUpdated, onItemDeleted, onFoundThisClick }) {
   const { currentUser } = useAuth();
 
   // ── ALL HOOKS MUST RUN BEFORE ANY EARLY RETURN ──────────────────────────
@@ -305,6 +305,31 @@ function ItemDetailModal({ item, isOpen, onClose, onItemUpdated, onItemDeleted }
                   )}
                   <p className="text-xs text-gray-400 text-center mt-2">
                     The finder will be notified to provide more location details
+                  </p>
+                </div>
+              )}
+
+              {/* Non-owner + lost: "I Found This" button */}
+              {!isOwner && isLost && onFoundThisClick && (
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      onFoundThisClick({
+                        relatedToLostItemId: item.id,
+                        prefillType: 'found',
+                        prefillCategory: item.category,
+                        prefillLocation: item.location,
+                        prefillTitle: item.title || item.name,
+                      });
+                      onClose();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-colors text-sm"
+                  >
+                    <IoCheckmarkCircleOutline className="text-lg" />
+                    I Found This Item
+                  </button>
+                  <p className="text-xs text-gray-400 text-center mt-2">
+                    Report that you found this item — the owner will be notified automatically
                   </p>
                 </div>
               )}

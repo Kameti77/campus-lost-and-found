@@ -19,6 +19,12 @@ const getNotificationContent = (notification) => {
         message: `Location updated for found "${notification.itemTitle}" — check the post`,
         color: 'text-green-600'
       };
+    case 'potential_match_found':
+      return {
+        icon: '🎉',
+        message: `Someone found an item matching your lost "${notification.itemTitle}"!`,
+        color: 'text-green-600'
+      };
     case 'new_item':
       return {
         icon: '🔔',

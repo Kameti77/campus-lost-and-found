@@ -76,6 +76,9 @@ router.post('/', async (req, res) => {
       // Private fields — stored but never returned by GET
       privateDescription,
       privateImageUrl,  // found: private image, lost: proof image
+      
+      // Connection field — links found item to original lost post
+      relatedToLostItemId,  // NEW: if this found item is responding to a lost post
     } = req.body;
 
     // Validate required fields
@@ -109,6 +112,9 @@ router.post('/', async (req, res) => {
       // Private — stored but stripped from GET responses
       privateDescription: privateDescription?.trim() || null,
       privateImageUrl: privateImageUrl || null,
+      
+      // Connection — links this found item to original lost post
+      relatedToLostItemId: relatedToLostItemId || null,
 
       // Timestamps — server-side, not client clock
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -116,6 +122,42 @@ router.post('/', async (req, res) => {
     };
 
     const docRef = await db.collection(ITEMS_COLLECTION).add(itemData);
+
+    // ── If this is a "I Found This" response, notify the original poster ──
+    if (relatedToLostItemId && type === 'found') {
+      try {
+        const lostPostDoc = await db.collection(ITEMS_COLLECTION).doc(relatedToLostItemId).get();
+        
+        if (lostPostDoc.exists) {
+          const lostPostData = lostPostDoc.data();
+          const originalPosterId = lostPostData.reportedBy;
+          
+          // Don't notify if finder is the same person (edge case)
+          if (originalPosterId !== reportedBy) {
+            // Save in-app notification
+            await saveNotification({
+              toUid: originalPosterId,
+              fromUid: reportedBy,
+              itemId: docRef.id,
+              itemTitle: title,
+              type: 'potential_match_found'
+            });
+
+            // Send push notification
+            const token = await getUserFCMToken(originalPosterId);
+            await sendToDevice(
+              token,
+              '🎉 Someone Found Your Item!',
+              `Someone reported finding a ${title} that might match your lost item. Check it out!`,
+              { itemId: docRef.id, type: 'potential_match_found' }
+            );
+          }
+        }
+      } catch (notifyError) {
+        // Log but don't fail the whole request if notification fails
+        console.error('Failed to notify original poster:', notifyError);
+      }
+    }
 
     // ── Broadcast FCM push to all subscribers ──
     // Differentiate lost vs found in the notification
