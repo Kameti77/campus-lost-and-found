@@ -11,9 +11,10 @@ import HowItWorksPage from "../../pages/HowItWorksPage";
 import ItemDetailModal from "../ItemDetailModal";
 
 function AppLayout() {
-  const [sidebarOpen, setSidebarOpen]   = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [items, setItems]               = useState([]);
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [selectedItem, setSelectedItem]   = useState(null);
+  const [items, setItems]                 = useState([]);
+  const [reportPrefillData, setReportPrefillData] = useState(null); // NEW
 
   const handleItemsLoaded  = (loaded)       => setItems(loaded);
   const handleCardClick    = (item)         => setSelectedItem(item);
@@ -27,6 +28,12 @@ function AppLayout() {
     setSelectedItem(null);
   };
 
+  // NEW: Handle "I Found This" button click
+  const handleFoundThisClick = (prefillData) => {
+    setReportPrefillData(prefillData);
+    // Sidebar will detect this and open ReportItemModal automatically
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
 
@@ -34,6 +41,8 @@ function AppLayout() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onItemCreated={handleItemCreated}
+        reportPrefillData={reportPrefillData}              // NEW
+        onPrefillDataUsed={() => setReportPrefillData(null)} // NEW
       />
 
       <div className="flex flex-col flex-1 min-w-0">
@@ -66,6 +75,7 @@ function AppLayout() {
         onClose={() => setSelectedItem(null)}
         onItemUpdated={handleItemUpdated}
         onItemDeleted={handleItemDeleted}
+        onFoundThisClick={handleFoundThisClick}  // NEW
       />
 
     </div>

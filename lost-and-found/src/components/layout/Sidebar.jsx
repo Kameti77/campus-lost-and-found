@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { IoHomeOutline, IoClipboardOutline, IoInformationCircleOutline } from "react-icons/io5";
 import { PiWarningCircleLight } from "react-icons/pi";
@@ -6,10 +6,16 @@ import { IoIosCheckmarkCircleOutline } from "react-icons/io";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import ReportItemModal from "../ReportItemModal";
 
-function Sidebar({ isOpen, onClose, onItemCreated }) {
+function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillDataUsed }) {
   const [showModal, setShowModal] = useState(false);
 
-  // ── Top nav: browse pages ─────────────────────────────────────────────────
+  // ── Auto-open modal when prefill data arrives (from "I Found This" button) ──
+  useEffect(() => {
+    if (reportPrefillData) {
+      setShowModal(true);
+    }
+  }, [reportPrefillData]);
+
   const navItems = [
     { label: "Home",        icon: IoHomeOutline,               to: "/"      },
     { label: "Lost Items",  icon: PiWarningCircleLight,        to: "/lost"  },
@@ -17,11 +23,13 @@ function Sidebar({ isOpen, onClose, onItemCreated }) {
     { label: "How It Works",  icon: IoInformationCircleOutline,   to: "/how-it-works" },
   ];
 
-  // ── Bottom section: user-specific actions ────────────────────────────────
-  // "My Reports" lives here — above the divider from "Report Item"
-  // Order: My Reports → divider → Report Item
-  // Reasoning: My Reports is navigation (goes somewhere), Report Item is an action (does something)
-  // Keeping them in separate visual groups makes the distinction clear
+  const handleModalClose = () => {
+    setShowModal(false);
+    // Clear prefill data when modal closes
+    if (reportPrefillData && onPrefillDataUsed) {
+      onPrefillDataUsed();
+    }
+  };
 
   return (
     <>
@@ -73,7 +81,7 @@ function Sidebar({ isOpen, onClose, onItemCreated }) {
           {/* ── User section ── */}
           <div className="mt-4">
 
-            {/* My Reports — navigation link, same style as top nav */}
+            {/* My Reports */}
             <NavLink
               to="/my-reports"
               onClick={onClose}
@@ -88,10 +96,10 @@ function Sidebar({ isOpen, onClose, onItemCreated }) {
               <span>My Reports</span>
             </NavLink>
 
-            {/* Divider — separates navigation from action */}
+            {/* Divider */}
             <div className="my-3 border-t" />
 
-            {/* Report Item — action button, intentionally different style */}
+            {/* Report Item */}
             <button
               onClick={() => setShowModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition font-medium"
@@ -107,11 +115,12 @@ function Sidebar({ isOpen, onClose, onItemCreated }) {
 
       <ReportItemModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={handleModalClose}
         onItemCreated={(newItem) => {
           onItemCreated?.(newItem);
-          setShowModal(false);
+          handleModalClose();
         }}
+        prefillData={reportPrefillData}  // Pass prefill data to modal
       />
     </>
   );
