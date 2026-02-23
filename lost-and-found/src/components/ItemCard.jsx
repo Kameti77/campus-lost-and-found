@@ -22,9 +22,23 @@ function ItemCard({ item, onClick }) {
     ? 'bg-red-100 text-red-700'
     : 'bg-green-100 text-green-700';
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
+  // Safe date formatter - handles plain date strings "2026-02-15" without timezone shift
+  const formatDate = (value) => {
+    if (!value) return '';
+    
+    // If it's a plain date string "YYYY-MM-DD", parse as UTC to avoid day-shift
+    const str = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      const [y, m, d] = str.split('-').map(Number);
+      const date = new Date(Date.UTC(y, m - 1, d));
+      return date.toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        timeZone: 'UTC'
+      });
+    }
+    
+    // Otherwise parse normally (handles ISO strings, Firestore timestamps)
+    return new Date(value).toLocaleDateString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric'
     });
   };
@@ -62,7 +76,7 @@ function ItemCard({ item, onClick }) {
 
         {/* Status badge */}
         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold mb-2 ${statusStyle}`}>
-          {isLost ? 'Lost' : 'Found'}
+          {isLost ? '🔍 Lost' : '📦 Found'}
         </span>
 
         {/* Title */}

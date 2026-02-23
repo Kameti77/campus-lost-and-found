@@ -1,160 +1,119 @@
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { IoHomeOutline } from "react-icons/io5";
-import { PiWarningCircleLight } from "react-icons/pi";
-import { IoIosCheckmarkCircleOutline } from "react-icons/io";
-import { IoMdAddCircleOutline } from "react-icons/io";
-import ReportItemModal from "../components/ReportItemModal";
-import { createItem, uploadImage } from "../services/api";
-import { useAuth } from "../context/AuthContext";
-import useUserProfile from "../hooks/useUserProfile";
+import { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import ItemCard from '../components/ItemCard';
+import useFilteredItems from '../hooks/useFilteredItems';
 
-// NavLink gives us active state + real URL navigation for free
-// isActive is provided automatically by React Router when the URL matches
-
-function Sidebar({ isOpen, onClose, onItemCreated }) {
-  const [showModal, setShowModal] = useState(false);
+function MyReportsPage({ onCardClick, onItemsLoaded }) {
   const { currentUser } = useAuth();
-  const { profile } = useUserProfile();
 
-  const navItems = [
-    { label: "Home",        icon: IoHomeOutline,                 to: "/"      },
-    { label: "Lost Items",  icon: PiWarningCircleLight,          to: "/lost"  },
-    { label: "Found Items", icon: IoIosCheckmarkCircleOutline,   to: "/found" },
-  ];
+  // Fetch ALL items first (type: 'all' means no type filter)
+  const { items, loading, error, fetchItems } = useFilteredItems('all');
 
-  const handleSubmitItem = async (formData) => {
-    try {
-      let imageUrl        = null;
-      let privateImageUrl = null;
+  // Filter to show only items THIS user posted
+  const myItems = items.filter(item => item.reportedBy === currentUser?.uid);
 
-      const isLost = formData.type === 'lost';
+  // Count by type
+  const lostCount = myItems.filter(i => 
+    (i.type || i.status || '').toLowerCase() === 'lost'
+  ).length;
+  
+  const foundCount = myItems.filter(i => 
+    (i.type || i.status || '').toLowerCase() === 'found'
+  ).length;
 
-      // Lost item: public image shown on cards
-      if (isLost && formData.publicImage) {
-        const result = await uploadImage(formData.publicImage, false);
-        imageUrl = result.imageUrl;
-      }
-
-      // Lost item: proof image — stored privately
-      if (isLost && formData.privateImage) {
-        const result = await uploadImage(formData.privateImage, true);
-        privateImageUrl = result.imageUrl;
-      }
-
-      // Found item: actual photo — stored privately, shown as placeholder publicly
-      if (!isLost && formData.privateImage) {
-        const result = await uploadImage(formData.privateImage, true);
-        privateImageUrl = result.imageUrl;
-      }
-
-      const payload = {
-        // Public fields
-        title:           formData.title,
-        type:            formData.type,           // 'lost' | 'found'
-        category:        formData.category || 'Other',
-        location:        formData.location,
-        currentLocation: !isLost ? formData.currentLocation : null,
-        date:            formData.date || null,
-        imageUrl,                                  // lost: public | found: always null
-        reportedBy:      currentUser.uid,
-        reportedByName:  profile?.firstName || currentUser.email.split('@')[0],
-
-        // Private fields — stored but never returned by GET /items
-        privateDescription: formData.privateDescription || null,
-        privateImageUrl,
-      };
-
-      const result = await createItem(payload);
-
-      // Tell AppLayout a new item was created so it updates the list
-      onItemCreated?.(result.item);
-
-      setShowModal(false);
-    } catch (err) {
-      console.error('Failed to submit item:', err);
-      throw err; // let ReportItemModal show the error
+  // FIX: Only call onItemsLoaded when `items` changes, not myItems
+  // This prevents infinite loop because items only changes when data is fetched
+  useEffect(() => {
+    if (onItemsLoaded) {
+      onItemsLoaded(myItems);
     }
-  };
+  }, [items.length]); // ← Changed from [myItems, onItemsLoaded] to [items.length]
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-          onClick={onClose}
-        />
+    <div className="max-w-7xl mx-auto space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Reports</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Items you've reported lost or found
+          </p>
+        </div>
+        <button
+          onClick={fetchItems}
+          className="px-4 py-2 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition text-sm"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Stats */}
+      {!loading && myItems.length > 0 && (
+        <div className="flex gap-3">
+          <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 text-center min-w-[90px]">
+            <p className="text-2xl font-bold text-gray-900">{myItems.length}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Total</p>
+          </div>
+          <div className="bg-red-50 border border-red-100 rounded-xl px-5 py-3 text-center min-w-[90px]">
+            <p className="text-2xl font-bold text-red-600">{lostCount}</p>
+            <p className="text-xs text-red-500 mt-0.5">Lost</p>
+          </div>
+          <div className="bg-green-50 border border-green-100 rounded-xl px-5 py-3 text-center min-w-[90px]">
+            <p className="text-2xl font-bold text-green-600">{foundCount}</p>
+            <p className="text-xs text-green-500 mt-0.5">Found</p>
+          </div>
+        </div>
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed lg:static top-0 left-0
-        h-screen w-64 bg-white border-r z-50
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 overflow-y-auto flex-shrink-0
-      `}>
-        <nav className="p-4">
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col items-center py-20">
+          <div className="h-10 w-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="mt-4 text-gray-500">Loading your reports...</p>
+        </div>
+      )}
 
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-6 pt-2">
-            <div className="bg-orange-500 text-white p-2 rounded-md">🔍</div>
-            <h1 className="font-bold text-lg">Lost & Found</h1>
-          </div>
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          <p className="font-semibold">Error loading reports</p>
+          <p>{error}</p>
+          <button
+            onClick={fetchItems}
+            className="mt-3 px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
 
-          {/* Nav links */}
-          <ul className="space-y-1">
-            {navItems.map(({ label, icon: Icon, to }) => (
-              <li key={to}>
-                <NavLink
-                  to={to}
-                  end={to === '/'}   // 'end' prevents Home matching all routes
-                  onClick={onClose}  // close sidebar on mobile after tap
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium
-                    ${isActive
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'}
-                  `}
-                >
-                  <Icon size={20} />
-                  <span>{label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+      {/* Empty State */}
+      {!loading && !error && myItems.length === 0 && (
+        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-14 text-center">
+          <p className="text-5xl mb-4">📋</p>
+          <h3 className="text-lg font-semibold text-gray-800">No reports yet</h3>
+          <p className="text-gray-500 text-sm mt-2 max-w-xs mx-auto">
+            You haven't reported any items yet. Use the "Report Item" button in the sidebar to get started.
+          </p>
+        </div>
+      )}
 
-          <div className="my-4 border-t" />
+      {/* Items Grid */}
+      {!loading && !error && myItems.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {myItems.map(item => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              onClick={onCardClick}
+            />
+          ))}
+        </div>
+      )}
 
-          {/* Report Item button */}
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => setShowModal(true)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition font-medium"
-              >
-                <IoMdAddCircleOutline size={20} />
-                <span>Report Item</span>
-              </button>
-            </li>
-          </ul>
-
-        </nav>
-      </aside>
-
-      {/* ReportItemModal — onSubmit wired to handleSubmitItem above */}
-      <ReportItemModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSubmit={handleSubmitItem}
-        onItemCreated={(newItem) => {
-          onItemCreated?.(newItem);
-          setShowModal(false);
-        }}
-      />
-    </>
+    </div>
   );
 }
 
-export default Sidebar;
+export default MyReportsPage;

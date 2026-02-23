@@ -103,7 +103,8 @@ router.post('/', async (req, res) => {
       category: category || 'Other',
       location: location?.trim() || null,
       currentLocation: type === 'found' ? (currentLocation?.trim() || null) : null,
-      date: date ? new Date(date) : admin.firestore.FieldValue.serverTimestamp(),
+      // Store date as-is if provided (string "2026-02-15"), otherwise use server timestamp
+      date: date || null,
       status: 'open',
       imageUrl: type === 'lost' ? (imageUrl || null) : null, // found items never have public image
       reportedBy,
