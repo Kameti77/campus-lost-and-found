@@ -9,7 +9,7 @@ import ReportItemModal from "../ReportItemModal";
 function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillDataUsed }) {
   const [showModal, setShowModal] = useState(false);
 
-  // ── Auto-open modal when prefill data arrives (from "I Found This" button) ──
+  // Auto-open modal when prefill data arrives (from "I Found This" button)
   useEffect(() => {
     if (reportPrefillData) {
       setShowModal(true);
@@ -17,15 +17,14 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
   }, [reportPrefillData]);
 
   const navItems = [
-    { label: "Home",        icon: IoHomeOutline,               to: "/"      },
-    { label: "Lost Items",  icon: PiWarningCircleLight,        to: "/lost"  },
-    { label: "Found Items", icon: IoIosCheckmarkCircleOutline, to: "/found" },
-    { label: "How It Works",  icon: IoInformationCircleOutline,   to: "/how-it-works" },
+    { label: "Home",         icon: IoHomeOutline,                to: "/"             },
+    { label: "Lost Items",   icon: PiWarningCircleLight,         to: "/lost"         },
+    { label: "Found Items",  icon: IoIosCheckmarkCircleOutline,  to: "/found"        },
+    { label: "How It Works", icon: IoInformationCircleOutline,   to: "/how-it-works" },
   ];
 
   const handleModalClose = () => {
     setShowModal(false);
-    // Clear prefill data when modal closes
     if (reportPrefillData && onPrefillDataUsed) {
       onPrefillDataUsed();
     }
@@ -41,6 +40,7 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
         />
       )}
 
+      {/* Sidebar */}
       <aside className={`
         fixed lg:static top-0 left-0
         h-screen w-64 bg-white border-r z-50 flex-shrink-0
@@ -56,7 +56,7 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
             <h1 className="font-bold text-lg">Lost & Found</h1>
           </div>
 
-          {/* ── Browse navigation ── */}
+          {/* Main Navigation */}
           <ul className="space-y-1">
             {navItems.map(({ label, icon: Icon, to }) => (
               <li key={to}>
@@ -78,9 +78,8 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
             ))}
           </ul>
 
-          {/* ── User section ── */}
+          {/* User Section */}
           <div className="mt-4">
-
             {/* My Reports */}
             <NavLink
               to="/my-reports"
@@ -96,10 +95,9 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
               <span>My Reports</span>
             </NavLink>
 
-            {/* Divider */}
             <div className="my-3 border-t" />
 
-            {/* Report Item */}
+            {/* Report Item Button */}
             <button
               onClick={() => setShowModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition font-medium"
@@ -107,12 +105,12 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
               <IoMdAddCircleOutline size={20} />
               <span>Report Item</span>
             </button>
-
           </div>
 
         </nav>
       </aside>
 
+      {/* Report Item Modal */}
       <ReportItemModal
         isOpen={showModal}
         onClose={handleModalClose}
@@ -120,7 +118,7 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
           onItemCreated?.(newItem);
           handleModalClose();
         }}
-        prefillData={reportPrefillData}  // Pass prefill data to modal
+        prefillData={reportPrefillData}
       />
     </>
   );

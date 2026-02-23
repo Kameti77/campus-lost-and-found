@@ -83,10 +83,12 @@ router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
 
+    // Note: orderBy requires a Firestore composite index
+    // For now, fetch without ordering to avoid 500 errors
+    // To add ordering back: create index in Firebase Console
     const snapshot = await db.collection('notifications')
       .where('toUid', '==', uid)
-      .orderBy('createdAt', 'desc')
-      .limit(20) // last 20 notifications
+      .limit(20)
       .get();
 
     const notifications = [];
@@ -99,6 +101,9 @@ router.get('/:uid', async (req, res) => {
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
       });
     });
+
+    // Sort in JavaScript instead of Firestore (temporary fix)
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // Count unread separately for badge
     const unreadCount = notifications.filter(n => !n.read).length;
