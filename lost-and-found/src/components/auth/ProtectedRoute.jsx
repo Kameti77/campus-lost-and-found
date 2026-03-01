@@ -1,28 +1,25 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
-// Component to protect routes - redirects to onboarding if not authenticated
-const PrivateRoute = ({ children }) => {
+function ProtectedRoute({ children }) {
   const { currentUser, loading } = useAuth();
 
-  // Show loading spinner while checking if user is logged in
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="h-12 w-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // If no user is logged in, redirect to onboarding page
   if (!currentUser) {
+    // Redirect to onboarding instead of login
     return <Navigate to="/onboarding" replace />;
   }
 
-  // If user hasn't verified email, show inline verification message
   if (!currentUser.emailVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -40,16 +37,12 @@ const PrivateRoute = ({ children }) => {
           >
             I've Verified — Continue
           </button>
-          <p className="text-sm text-gray-500 mt-4">
-            Didn't get it? Check spam or wait a few minutes.
-          </p>
         </div>
       </div>
     );
   }
 
-  // User is authenticated and verified - show the protected content
   return children;
-};
+}
 
-export default PrivateRoute;
+export default ProtectedRoute;
