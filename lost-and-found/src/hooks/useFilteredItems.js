@@ -27,13 +27,13 @@ const useFilteredItems = (typeFilter) => {
       const filtered = typeFilter === 'all'
         ? all
         : all.filter(item => {
-            const type = (item.type || item.status || '').toLowerCase();
-            return type === typeFilter.toLowerCase();
-          });
+          const type = (item.type || item.status || '').toLowerCase();
+          return type === typeFilter.toLowerCase();
+        });
 
       setItems(filtered);
     } catch (err) {
-      setError(err.message || 'Failed to load items');
+      setErrorMessage(err.message || 'Failed to load');
     } finally {
       setLoading(false);
     }

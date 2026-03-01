@@ -1,40 +1,35 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
-import AppLayout from './components/layout/AppLayout';
 import PrivateRoute from './components/auth/PrivateRoute';
-import Profile from './pages/Profile';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword';
+import AppLayout from './components/layout/AppLayout';
+import ProfilePage from './pages/Profile';
+import OnboardingPage from './pages/OnboardingPage';
+import LoginPage from './pages/Login';
+import SignupPage from './pages/Signup';
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <SearchProvider>
+    <AuthProvider>
+      <SearchProvider>
+        <BrowserRouter>
           <Routes>
-
-            {/* ── PUBLIC ── */}
-            <Route path="/login"           element={<Login />} />
-            <Route path="/signup"          element={<Signup />} />
-            <Route path="/verify-email"    element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-
-            {/* ── PROTECTED: standalone pages (outside AppLayout) ── */}
-            {/* Profile must be listed BEFORE the /* catch-all */}
+            {/* Public routes */}
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            
+            {/* Protected: Profile page */}
             <Route
               path="/profile"
               element={
                 <PrivateRoute>
-                  <Profile />
+                  <ProfilePage />
                 </PrivateRoute>
               }
             />
-
-            {/* ── PROTECTED: main app shell ── */}
-            {/* AppLayout has its own nested Routes for /, /lost, /found */}
+            
+            {/* Protected: Main app with nested routes */}
             <Route
               path="/*"
               element={
@@ -43,11 +38,10 @@ function App() {
                 </PrivateRoute>
               }
             />
-
           </Routes>
-        </SearchProvider>
-      </AuthProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </SearchProvider>
+    </AuthProvider>
   );
 }
 
