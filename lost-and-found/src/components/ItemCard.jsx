@@ -76,7 +76,7 @@ function ItemCard({ item, onClick }) {
 
         {/* Status badge */}
         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold mb-2 ${statusStyle}`}>
-          {isLost ? '🔍 Lost' : '📦 Found'}
+          {isLost ? 'Lost' : 'Found'}
         </span>
 
         {/* Title */}
