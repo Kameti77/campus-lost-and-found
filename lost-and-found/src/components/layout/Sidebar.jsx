@@ -17,10 +17,9 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
   }, [reportPrefillData]);
 
   const navItems = [
-    { label: "Home",         icon: IoHomeOutline,                to: "/"             },
-    { label: "Lost Items",   icon: PiWarningCircleLight,         to: "/lost"         },
-    { label: "Found Items",  icon: IoIosCheckmarkCircleOutline,  to: "/found"        },
-    { label: "How It Works", icon: IoInformationCircleOutline,   to: "/how-it-works" },
+    { label: "Home", icon: IoHomeOutline, to: "/" },
+    { label: "Lost Items", icon: PiWarningCircleLight, to: "/lost" },
+    { label: "Found Items", icon: IoIosCheckmarkCircleOutline, to: "/found" },
   ];
 
   const handleModalClose = () => {
@@ -78,26 +77,8 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
             ))}
           </ul>
 
-          {/* User Section */}
+          {/* Report Item Button */}
           <div className="mt-4">
-            {/* My Reports */}
-            <NavLink
-              to="/my-reports"
-              onClick={onClose}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium
-                ${isActive
-                  ? 'bg-orange-500 text-white'
-                  : 'text-gray-700 hover:bg-gray-100'}
-              `}
-            >
-              <IoClipboardOutline size={20} />
-              <span>My Reports</span>
-            </NavLink>
-
-            <div className="my-3 border-t" />
-
-            {/* Report Item Button */}
             <button
               onClick={() => setShowModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition font-medium"
@@ -106,20 +87,61 @@ function Sidebar({ isOpen, onClose, onItemCreated, reportPrefillData, onPrefillD
               <span>Report Item</span>
             </button>
           </div>
+          
+
+          <div className="my-3 border-t" />
+
+          {/* User Section */}
+
+          {/* My Reports */}
+          <NavLink
+            to="/my-reports"
+            onClick={onClose}
+            className={({ isActive }) => `
+                flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium
+                ${isActive
+                ? 'bg-orange-500 text-white'
+                : 'text-gray-700 hover:bg-gray-100'}
+              `}
+          >
+            <IoClipboardOutline size={20} />
+            <span>My Reports</span>
+          </NavLink>
+
+
+          <NavLink
+            to={"/how-it-works"}
+            end={"/how-it-works" === '/'}
+            onClick={onClose}
+            className={({ isActive }) => `
+                    flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium
+                    ${isActive
+                ? 'bg-orange-500 text-white'
+                : 'text-gray-700 hover:bg-gray-100'}
+                  `}
+          >
+            <IoInformationCircleOutline size={20} />
+            <span>{"How It Works"}</span>
+          </NavLink>
+
+
+
+
 
         </nav>
       </aside>
 
-      {/* Report Item Modal */}
-      <ReportItemModal
-        isOpen={showModal}
-        onClose={handleModalClose}
-        onItemCreated={(newItem) => {
-          onItemCreated?.(newItem);
-          handleModalClose();
-        }}
-        prefillData={reportPrefillData}
-      />
+                      {/* Report Item Modal */}
+          <ReportItemModal
+            isOpen={showModal}
+            onClose={handleModalClose}
+            onItemCreated={(newItem) => {
+              onItemCreated?.(newItem);
+              handleModalClose();
+            }}
+            prefillData={reportPrefillData}
+          />
+
     </>
   );
 }

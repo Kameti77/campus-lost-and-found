@@ -176,7 +176,7 @@ function ReportItemModal({ isOpen, onClose, onItemCreated, prefillData }) {
                       : "bg-gray-100"
                   }`}
                 >
-                  {t === "lost" ? "🔍 Lost Item" : "📦 Found Item"}
+                  {t === "lost" ? "Lost Item" : "Found Item"}
                 </button>
               ))}
             </div>
