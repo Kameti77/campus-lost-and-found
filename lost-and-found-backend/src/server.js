@@ -9,6 +9,15 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const path = require("path");
+
+// Serve frontend build
+// app.use(express.static(path.join(__dirname, "lost-and-found/build")));
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "lost-and-found/build", "index.html"));
+// });
+
 // Health check route
 app.get('/api/test', (req, res) => {
   res.json({ 

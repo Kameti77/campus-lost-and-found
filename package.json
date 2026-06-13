@@ -1,0 +1,23 @@
+{
+  "name": "lostfound",
+  "version": "1.0.0",
+  "description": "A campus lost and found web application that helps students report lost items, post found items, and reconnect owners with their belongings.",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd lost-and-found && npm install && npm run build",
+    "start": "node lost-and-found-backend/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kameti77/campus-lost-and-found.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Kameti77/campus-lost-and-found/issues"
+  },
+  "homepage": "https://github.com/Kameti77/campus-lost-and-found#readme"
+}

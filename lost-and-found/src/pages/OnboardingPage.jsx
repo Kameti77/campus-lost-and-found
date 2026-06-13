@@ -32,11 +32,6 @@ function OnboardingPage() {
     }
   ];
 
-  const stats = [
-    { number: "500+", label: "Students" },
-    { number: "200+", label: "Items Found" },
-    { number: "< 24hrs", label: "Avg Recovery" }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 relative overflow-hidden">
