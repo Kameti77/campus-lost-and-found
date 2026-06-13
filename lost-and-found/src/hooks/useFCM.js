@@ -76,7 +76,7 @@ const useFCM = (currentUser, onForegroundMessage) => {
 
       // Subscribe to new_items topic via your backend
       // We call the backend because topic subscription requires Admin SDK
-      await fetch('http://localhost:5000/api/notifications/subscribe-topic', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/subscribe-topic`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, topic: 'new_items' })
