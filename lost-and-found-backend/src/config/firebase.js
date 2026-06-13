@@ -1,14 +1,9 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../../serviceAccountKey.json');
 
-// Initialize Firebase Admin
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: 'lostandfound-937c4.firebasestorage.app' 
+  credential: admin.credential.cert(serviceAccount)
 });
 
-// Get Firestore and Storage instances
-const db = admin.firestore();
-const bucket = admin.storage().bucket();
-
-module.exports = { admin, db, bucket };
+module.exports = admin;
