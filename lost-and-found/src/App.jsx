@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
-import PrivateRoute from './components/auth/PrivateROute';
+import PrivateRoute from './components/auth/PrivateRoute';
 import AppLayout from './components/layout/AppLayout';
 import ProfilePage from './pages/Profile';
 import OnboardingPage from './pages/OnboardingPage';
